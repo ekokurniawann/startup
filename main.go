@@ -6,8 +6,6 @@ import (
 
 	"github.com/ekokurniawann/startup/handler"
 	"github.com/ekokurniawann/startup/user"
-	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/chi/v5"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,13 +22,19 @@ func main() {
 
 	userHandler := handler.NewUserHandler(userService)
 
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Group(func(r chi.Router) {
-		r.Post("/api/v1/users", userHandler.RegisterUser)
-		r.Post("/api/v1/sessions", userHandler.Login)
-	})
+	mux := http.NewServeMux()
 
-	http.ListenAndServe(":3000", r)
+	mux.HandleFunc("/api/v1/users", userHandler.RegisterUser)
+	mux.HandleFunc("/api/v1/sessions", userHandler.Login)
+	mux.HandleFunc("/api/v1/email_checkers", userHandler.CheckEmailAvailability)
 
+	server := &http.Server{
+		Addr:    ":3000",
+		Handler: mux,
+	}
+
+	log.Println("Starting server on :3000")
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Error starting server: %s\n", err)
+	}
 }
