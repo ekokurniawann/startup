@@ -48,3 +48,32 @@ func (h *userHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	respone := helper.APIResponse("Account has been registered", http.StatusOK, "succes", formatter)
 	respondJSON(w, http.StatusOK, respone)
 }
+
+func (h *userHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var input user.LoginInput
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+
+		errorMessage := map[string]interface{}{"errors": errors}
+
+		respone := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		respondJSON(w, http.StatusUnprocessableEntity, respone)
+		return
+	}
+
+	loginUser, err := h.userService.Login(input)
+	if err != nil {
+		errorMessage := map[string]interface{}{"errors": err.Error()}
+
+		respone := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		respondJSON(w, http.StatusUnprocessableEntity, respone)
+		return
+	}
+
+	formatter := user.FormatUser(loginUser, "uhuy")
+
+	respone := helper.APIResponse("Succesfuly loggedin", http.StatusOK, "succes", formatter)
+	respondJSON(w, http.StatusOK, respone)
+}
