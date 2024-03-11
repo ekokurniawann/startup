@@ -27,6 +27,7 @@ func main() {
 	mux.HandleFunc("/api/v1/users", userHandler.RegisterUser)
 	mux.HandleFunc("/api/v1/sessions", userHandler.Login)
 	mux.HandleFunc("/api/v1/email_checkers", userHandler.CheckEmailAvailability)
+	mux.HandleFunc("/api/v1/avatars", userHandler.UploadAvatar)
 
 	server := &http.Server{
 		Addr:    ":3000",

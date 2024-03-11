@@ -2,7 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/ekokurniawann/startup/helper"
 	"github.com/ekokurniawann/startup/user"
@@ -102,5 +105,77 @@ func (h *userHandler) CheckEmailAvailability(w http.ResponseWriter, r *http.Requ
 	}
 
 	response := helper.APIResponse(metaMessage, http.StatusOK, "success", data)
+	respondJSON(w, http.StatusOK, response)
+}
+
+func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		data := map[string]interface{}{
+			"is_uploaded": false,
+		}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		respondJSON(w, http.StatusBadRequest, response)
+		return
+	}
+
+	file, handler, err := r.FormFile("avatar")
+	if err != nil {
+		data := map[string]interface{}{
+			"is_uploaded": false,
+		}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		respondJSON(w, http.StatusBadRequest, response)
+		return
+	}
+	defer file.Close()
+
+	// harusnya dapat dari jwt
+	userID := 1
+
+	path := fmt.Sprintf("images/%d-%s", userID, handler.Filename)
+
+	dst, err := os.Create(path)
+	if err != nil {
+		data := map[string]interface{}{
+			"is_uploaded": false,
+		}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		respondJSON(w, http.StatusBadRequest, response)
+		return
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, file)
+	if err != nil {
+		data := map[string]interface{}{
+			"is_uploaded": false,
+		}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		respondJSON(w, http.StatusBadRequest, response)
+		return
+	}
+
+	_, err = h.userService.SaveAvatar(userID, path)
+	if err != nil {
+		data := map[string]interface{}{
+			"is_uploaded": false,
+		}
+		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+
+		respondJSON(w, http.StatusBadRequest, response)
+		return
+	}
+
+	data := map[string]interface{}{
+		"is_uploaded": true,
+	}
+	response := helper.APIResponse("Avatar successfully uploaded", http.StatusOK, "succes", data)
+
 	respondJSON(w, http.StatusOK, response)
 }
