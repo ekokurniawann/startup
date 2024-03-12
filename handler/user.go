@@ -7,16 +7,18 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ekokurniawann/startup/auth"
 	"github.com/ekokurniawann/startup/helper"
 	"github.com/ekokurniawann/startup/user"
 )
 
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -44,7 +46,15 @@ func (h *userHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	formatter := user.FormatUser(newUser, "token")
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		respone := helper.APIResponse("Register account failed", http.StatusBadRequest, "error", nil)
+		respondJSON(w, http.StatusBadRequest, respone)
+		return
+	}
+
+	formatter := user.FormatUser(newUser, token)
+
 	respone := helper.APIResponse("Account has been registered", http.StatusOK, "success", formatter)
 	respondJSON(w, http.StatusOK, respone)
 }
@@ -69,7 +79,16 @@ func (h *userHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	formatter := user.FormatUser(loginUser, "uhuy")
+	token, err := h.authService.GenerateToken(loginUser.ID)
+	if err != nil {
+		errorMessage := map[string]interface{}{"errors": err.Error()}
+		respone := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		respondJSON(w, http.StatusUnprocessableEntity, respone)
+		return
+	}
+
+	formatter := user.FormatUser(loginUser, token)
+
 	respone := helper.APIResponse("Successfully logged in", http.StatusOK, "success", formatter)
 	respondJSON(w, http.StatusOK, respone)
 }

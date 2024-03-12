@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ekokurniawann/startup/auth"
 	"github.com/ekokurniawann/startup/handler"
 	"github.com/ekokurniawann/startup/user"
 	"gorm.io/driver/postgres"
@@ -19,8 +20,9 @@ func main() {
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
+	authService := auth.NewService()
 
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, authService)
 
 	mux := http.NewServeMux()
 
