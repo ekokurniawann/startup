@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -49,19 +48,13 @@ func main() {
 	}
 }
 
-func respondJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
 func authMiddleware(authService auth.Service, userService user.Service, nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 
 		if !strings.Contains(authHeader, " ") {
 			response := helper.APIResponse("Authorization header format is invalid", http.StatusUnauthorized, "error", nil)
-			respondJSON(w, http.StatusUnauthorized, response)
+			helper.RespondJSON(w, http.StatusUnauthorized, response)
 			return
 		}
 
@@ -71,21 +64,21 @@ func authMiddleware(authService auth.Service, userService user.Service, nextHand
 			parsedToken = stringToken[1]
 		} else {
 			response := helper.APIResponse("Token not found in Authorization header", http.StatusUnauthorized, "error", nil)
-			respondJSON(w, http.StatusUnauthorized, response)
+			helper.RespondJSON(w, http.StatusUnauthorized, response)
 			return
 		}
 
 		token, err := authService.ValidateToken(parsedToken)
 		if err != nil {
 			response := helper.APIResponse("Token is invalid or expired", http.StatusUnauthorized, "error", nil)
-			respondJSON(w, http.StatusUnauthorized, response)
+			helper.RespondJSON(w, http.StatusUnauthorized, response)
 			return
 		}
 
 		claim, ok := token.Claims.(jwt.MapClaims)
 		if !ok || !token.Valid {
 			response := helper.APIResponse("Invalid token format", http.StatusUnauthorized, "error", nil)
-			respondJSON(w, http.StatusUnauthorized, response)
+			helper.RespondJSON(w, http.StatusUnauthorized, response)
 			return
 		}
 
@@ -94,7 +87,7 @@ func authMiddleware(authService auth.Service, userService user.Service, nextHand
 		user, err := userService.GetUserByID(userID)
 		if err != nil {
 			response := helper.APIResponse("User not found", http.StatusUnauthorized, "error", nil)
-			respondJSON(w, http.StatusUnauthorized, response)
+			helper.RespondJSON(w, http.StatusUnauthorized, response)
 			return
 		}
 

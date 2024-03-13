@@ -27,12 +27,6 @@ func NewUserHandler(userService user.Service, authService auth.Service) *userHan
 	return &userHandler{userService, authService}
 }
 
-func respondJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
 func (h *userHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var input user.RegisterUserInput
 
@@ -41,28 +35,28 @@ func (h *userHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := map[string]interface{}{"errors": errors}
 		respone := helper.APIResponse("Register account failed", http.StatusUnprocessableEntity, "error", errorMessage)
-		respondJSON(w, http.StatusUnprocessableEntity, respone)
+		helper.RespondJSON(w, http.StatusUnprocessableEntity, respone)
 		return
 	}
 
 	newUser, err := h.userService.RegisterUser(input)
 	if err != nil {
 		respone := helper.APIResponse("Register account failed", http.StatusBadRequest, "error", nil)
-		respondJSON(w, http.StatusBadRequest, respone)
+		helper.RespondJSON(w, http.StatusBadRequest, respone)
 		return
 	}
 
 	token, err := h.authService.GenerateToken(newUser.ID)
 	if err != nil {
 		respone := helper.APIResponse("Register account failed", http.StatusBadRequest, "error", nil)
-		respondJSON(w, http.StatusBadRequest, respone)
+		helper.RespondJSON(w, http.StatusBadRequest, respone)
 		return
 	}
 
 	formatter := user.FormatUser(newUser, token)
 
 	respone := helper.APIResponse("Account has been registered", http.StatusOK, "success", formatter)
-	respondJSON(w, http.StatusOK, respone)
+	helper.RespondJSON(w, http.StatusOK, respone)
 }
 
 func (h *userHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +67,7 @@ func (h *userHandler) Login(w http.ResponseWriter, r *http.Request) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := map[string]interface{}{"errors": errors}
 		respone := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
-		respondJSON(w, http.StatusUnprocessableEntity, respone)
+		helper.RespondJSON(w, http.StatusUnprocessableEntity, respone)
 		return
 	}
 
@@ -81,7 +75,7 @@ func (h *userHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errorMessage := map[string]interface{}{"errors": err.Error()}
 		respone := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
-		respondJSON(w, http.StatusUnprocessableEntity, respone)
+		helper.RespondJSON(w, http.StatusUnprocessableEntity, respone)
 		return
 	}
 
@@ -89,14 +83,14 @@ func (h *userHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errorMessage := map[string]interface{}{"errors": err.Error()}
 		respone := helper.APIResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
-		respondJSON(w, http.StatusUnprocessableEntity, respone)
+		helper.RespondJSON(w, http.StatusUnprocessableEntity, respone)
 		return
 	}
 
 	formatter := user.FormatUser(loginUser, token)
 
 	respone := helper.APIResponse("Successfully logged in", http.StatusOK, "success", formatter)
-	respondJSON(w, http.StatusOK, respone)
+	helper.RespondJSON(w, http.StatusOK, respone)
 }
 
 func (h *userHandler) CheckEmailAvailability(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +100,7 @@ func (h *userHandler) CheckEmailAvailability(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		errorMessage := map[string]interface{}{"errors": err.Error()}
 		response := helper.APIResponse("Email checking failed", http.StatusUnprocessableEntity, "error", errorMessage)
-		respondJSON(w, http.StatusUnprocessableEntity, response)
+		helper.RespondJSON(w, http.StatusUnprocessableEntity, response)
 		return
 	}
 
@@ -114,7 +108,7 @@ func (h *userHandler) CheckEmailAvailability(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		errorMessage := map[string]interface{}{"errors": err.Error()}
 		response := helper.APIResponse("Email checking failed", http.StatusInternalServerError, "error", errorMessage)
-		respondJSON(w, http.StatusInternalServerError, response)
+		helper.RespondJSON(w, http.StatusInternalServerError, response)
 		return
 	}
 
@@ -130,7 +124,7 @@ func (h *userHandler) CheckEmailAvailability(w http.ResponseWriter, r *http.Requ
 	}
 
 	response := helper.APIResponse(metaMessage, http.StatusOK, "success", data)
-	respondJSON(w, http.StatusOK, response)
+	helper.RespondJSON(w, http.StatusOK, response)
 }
 
 func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +135,7 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 			"is_uploaded": false,
 		}
 		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
-		respondJSON(w, http.StatusBadRequest, response)
+		helper.RespondJSON(w, http.StatusBadRequest, response)
 		return
 	}
 
@@ -152,7 +146,7 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
 
-		respondJSON(w, http.StatusBadRequest, response)
+		helper.RespondJSON(w, http.StatusBadRequest, response)
 		return
 	}
 	defer file.Close()
@@ -161,7 +155,7 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		response := helper.APIResponse("Failed to get current user", http.StatusInternalServerError, "error", nil)
-		respondJSON(w, http.StatusInternalServerError, response)
+		helper.RespondJSON(w, http.StatusInternalServerError, response)
 		return
 	}
 
@@ -175,7 +169,7 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
 
-		respondJSON(w, http.StatusBadRequest, response)
+		helper.RespondJSON(w, http.StatusBadRequest, response)
 		return
 	}
 	defer dst.Close()
@@ -187,7 +181,7 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
 
-		respondJSON(w, http.StatusBadRequest, response)
+		helper.RespondJSON(w, http.StatusBadRequest, response)
 		return
 	}
 
@@ -198,7 +192,7 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
 
-		respondJSON(w, http.StatusBadRequest, response)
+		helper.RespondJSON(w, http.StatusBadRequest, response)
 		return
 	}
 
@@ -207,5 +201,5 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	response := helper.APIResponse("Avatar successfully uploaded", http.StatusOK, "succes", data)
 
-	respondJSON(w, http.StatusOK, response)
+	helper.RespondJSON(w, http.StatusOK, response)
 }
