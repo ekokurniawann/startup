@@ -12,6 +12,12 @@ import (
 	"github.com/ekokurniawann/startup/user"
 )
 
+type contextKey string
+
+const (
+	UserContextKey contextKey = "currentUser"
+)
+
 type userHandler struct {
 	userService user.Service
 	authService auth.Service
@@ -135,7 +141,6 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 			"is_uploaded": false,
 		}
 		response := helper.APIResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
-
 		respondJSON(w, http.StatusBadRequest, response)
 		return
 	}
@@ -152,9 +157,15 @@ func (h *userHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// harusnya dapat dari jwt
-	userID := 1
+	currentUser, ok := r.Context().Value(UserContextKey).(user.User)
 
+	if !ok {
+		response := helper.APIResponse("Failed to get current user", http.StatusInternalServerError, "error", nil)
+		respondJSON(w, http.StatusInternalServerError, response)
+		return
+	}
+
+	userID := currentUser.ID
 	path := fmt.Sprintf("images/%d-%s", userID, handler.Filename)
 
 	dst, err := os.Create(path)
