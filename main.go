@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ekokurniawann/startup/auth"
+	"github.com/ekokurniawann/startup/campaign"
 	"github.com/ekokurniawann/startup/handler"
 	"github.com/ekokurniawann/startup/helper"
 	"github.com/ekokurniawann/startup/user"
@@ -23,6 +25,18 @@ func main() {
 	}
 
 	userRepository := user.NewRepository(db)
+	campaignRepository := campaign.NewRepository(db)
+
+	campaign, _ := campaignRepository.FindAll()
+
+	for _, campaigns := range campaign {
+		fmt.Println(campaigns.Name)
+		if (len(campaigns.CampaignImages)) > 0 {
+			fmt.Println(campaigns.CampaignImages[0].FileName)
+		}
+	}
+	// fmt.Println(len(campaign))
+
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 
