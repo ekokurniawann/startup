@@ -21,6 +21,88 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: campaign_images; Type: TABLE; Schema: public; Owner: ekokurniawan
+--
+
+CREATE TABLE public.campaign_images (
+    id integer NOT NULL,
+    campaign_id integer,
+    file_name character varying(255),
+    is_primary smallint,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+ALTER TABLE public.campaign_images OWNER TO ekokurniawan;
+
+--
+-- Name: campaign_images_id_seq; Type: SEQUENCE; Schema: public; Owner: ekokurniawan
+--
+
+CREATE SEQUENCE public.campaign_images_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.campaign_images_id_seq OWNER TO ekokurniawan;
+
+--
+-- Name: campaign_images_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: ekokurniawan
+--
+
+ALTER SEQUENCE public.campaign_images_id_seq OWNED BY public.campaign_images.id;
+
+
+--
+-- Name: campaigns; Type: TABLE; Schema: public; Owner: ekokurniawan
+--
+
+CREATE TABLE public.campaigns (
+    id integer NOT NULL,
+    user_id integer,
+    name character varying(255),
+    short_description character varying(255),
+    description text,
+    perks text,
+    backer_count integer,
+    goal_amount integer,
+    current_amount integer,
+    slug character varying(255),
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+ALTER TABLE public.campaigns OWNER TO ekokurniawan;
+
+--
+-- Name: campaigns_id_seq; Type: SEQUENCE; Schema: public; Owner: ekokurniawan
+--
+
+CREATE SEQUENCE public.campaigns_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.campaigns_id_seq OWNER TO ekokurniawan;
+
+--
+-- Name: campaigns_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: ekokurniawan
+--
+
+ALTER SEQUENCE public.campaigns_id_seq OWNED BY public.campaigns.id;
+
+
+--
 -- Name: schema_migration; Type: TABLE; Schema: public; Owner: ekokurniawan
 --
 
@@ -73,10 +155,40 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: campaign_images id; Type: DEFAULT; Schema: public; Owner: ekokurniawan
+--
+
+ALTER TABLE ONLY public.campaign_images ALTER COLUMN id SET DEFAULT nextval('public.campaign_images_id_seq'::regclass);
+
+
+--
+-- Name: campaigns id; Type: DEFAULT; Schema: public; Owner: ekokurniawan
+--
+
+ALTER TABLE ONLY public.campaigns ALTER COLUMN id SET DEFAULT nextval('public.campaigns_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: ekokurniawan
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: campaign_images campaign_images_pkey; Type: CONSTRAINT; Schema: public; Owner: ekokurniawan
+--
+
+ALTER TABLE ONLY public.campaign_images
+    ADD CONSTRAINT campaign_images_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: campaigns campaigns_pkey; Type: CONSTRAINT; Schema: public; Owner: ekokurniawan
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_pkey PRIMARY KEY (id);
 
 
 --
@@ -100,6 +212,22 @@ ALTER TABLE ONLY public.users
 --
 
 CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USING btree (version);
+
+
+--
+-- Name: campaign_images campaign_images_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: ekokurniawan
+--
+
+ALTER TABLE ONLY public.campaign_images
+    ADD CONSTRAINT campaign_images_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id);
+
+
+--
+-- Name: campaigns campaigns_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: ekokurniawan
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
