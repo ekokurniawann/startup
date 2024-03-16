@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -31,11 +30,8 @@ func main() {
 	authService := auth.NewService()
 	campaignService := campaign.NewService(campaignRepository)
 
-	campaign, _ := campaignService.FindCampaigns(5)
-
-	fmt.Println(len(campaign))
-
 	userHandler := handler.NewUserHandler(userService, authService)
+	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	mux := http.NewServeMux()
 
@@ -45,6 +41,7 @@ func main() {
 	mux.HandleFunc("/api/v1/avatars", func(w http.ResponseWriter, r *http.Request) {
 		authMiddleware(authService, userService, http.HandlerFunc(userHandler.UploadAvatar)).ServeHTTP(w, r)
 	})
+	mux.HandleFunc("/api/v1/campaigns", campaignHandler.FindCampaigns)
 
 	server := &http.Server{
 		Addr:    ":3000",
