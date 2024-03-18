@@ -34,7 +34,7 @@ func main() {
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	mux := http.NewServeMux()
-
+	mux.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir("./images"))))
 	mux.HandleFunc("/api/v1/users", userHandler.RegisterUser)
 	mux.HandleFunc("/api/v1/sessions", userHandler.Login)
 	mux.HandleFunc("/api/v1/email_checkers", userHandler.CheckEmailAvailability)
