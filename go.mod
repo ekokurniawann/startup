@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/go-playground/validator/v10 v10.19.0
-	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/gorilla/mux v1.8.1
 	golang.org/x/crypto v0.19.0
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.7

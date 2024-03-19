@@ -12,6 +12,7 @@ import (
 	"github.com/ekokurniawann/startup/handler"
 	"github.com/ekokurniawann/startup/helper"
 	"github.com/ekokurniawann/startup/user"
+	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -33,25 +34,28 @@ func main() {
 	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 
-	mux := http.NewServeMux()
-	mux.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir("./images"))))
-	mux.HandleFunc("/api/v1/users", userHandler.RegisterUser)
-	mux.HandleFunc("/api/v1/sessions", userHandler.Login)
-	mux.HandleFunc("/api/v1/email_checkers", userHandler.CheckEmailAvailability)
-	mux.HandleFunc("/api/v1/avatars", func(w http.ResponseWriter, r *http.Request) {
+	router := mux.NewRouter()
+	apiV1 := router.PathPrefix("/api/v1").Subrouter()
+
+	apiV1.Handle("/images/", http.StripPrefix("/api/v1/images/", http.FileServer(http.Dir("./images"))))
+	apiV1.HandleFunc("/users", userHandler.RegisterUser).Methods("POST")
+	apiV1.HandleFunc("/sessions", userHandler.Login).Methods("POST")
+	apiV1.HandleFunc("/email_checkers", userHandler.CheckEmailAvailability).Methods("POST")
+	apiV1.HandleFunc("/avatars", func(w http.ResponseWriter, r *http.Request) {
 		authMiddleware(authService, userService, http.HandlerFunc(userHandler.UploadAvatar)).ServeHTTP(w, r)
-	})
-	mux.HandleFunc("/api/v1/campaigns", campaignHandler.FindCampaigns)
+	}).Methods("POST")
+	apiV1.HandleFunc("/campaigns", campaignHandler.FindCampaigns).Methods("GET")
 
 	server := &http.Server{
 		Addr:    ":3000",
-		Handler: mux,
+		Handler: router,
 	}
 
 	log.Println("Starting server on :3000")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Error starting server: %s\n", err)
 	}
+
 }
 
 func authMiddleware(authService auth.Service, userService user.Service, nextHandler http.Handler) http.Handler {
