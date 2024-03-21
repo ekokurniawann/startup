@@ -45,6 +45,7 @@ func main() {
 		authMiddleware(authService, userService, http.HandlerFunc(userHandler.UploadAvatar)).ServeHTTP(w, r)
 	}).Methods("POST")
 	apiV1.HandleFunc("/campaigns", campaignHandler.FindCampaigns).Methods("GET")
+	apiV1.HandleFunc("/campaigns/{id}", campaignHandler.FindCampaignByID)
 
 	server := &http.Server{
 		Addr:    ":3000",
